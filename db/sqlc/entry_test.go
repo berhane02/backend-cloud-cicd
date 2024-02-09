@@ -9,58 +9,62 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomEntries(t *testing.T) Account {
-	arg := CreateAccountParams{
-		Owner:    util.RandomOwner(),
-		Balance:  util.RandomMoney(),
-		Currency: util.RandomCurrency(),
+func createRandomEntry(t *testing.T, account Account) Entry {
+	arg := CreateEntryParams{
+		AccountID: account.ID,
+		Amount:    util.RandomMoney(),
 	}
 
-	account, err := testQueries.CreateAccount(context.Background(), arg)
+	entry, err := testQueries.CreateEntry(context.Background(), arg)
 	require.NoError(t, err)
-	require.NotEmpty(t, account)
+	require.NotEmpty(t, entry)
 
-	require.Equal(t, arg.Owner, account.Owner)
-	require.Equal(t, arg.Balance, account.Balance)
-	require.Equal(t, arg.Currency, account.Currency)
+	require.Equal(t, arg.AccountID, entry.AccountID)
+	require.Equal(t, arg.Amount, entry.Amount)
 
-	require.NotZero(t, account.ID)
-	require.NotZero(t, account.CreatedAt)
-	return account
+	require.NotZero(t, entry.ID)
+	require.NotZero(t, entry.CreatedAt)
+
+	return entry
 }
 
-func TestCreateEntries(t *testing.T) {
-	createRandomAccount(t)
+func TestCreateEntry(t *testing.T) {
+	account := createRandomAccount(t)
+	createRandomEntry(t, account)
 }
 
-func TestGetEntries(t *testing.T) {
-	account1 := createRandomAccount(t)
-	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
+func TestGetEntry(t *testing.T) {
+	account := createRandomAccount(t)
+	entry1 := createRandomEntry(t, account)
+
+	entry2, err := testQueries.GetEntry(context.Background(), entry1.ID)
 	require.NoError(t, err)
-	require.NotEmpty(t, account2)
+	require.NotEmpty(t, entry2)
 
-	require.Equal(t, account1.ID, account2.ID)
-	require.Equal(t, account1.Owner, account2.Owner)
-	require.Equal(t, account1.Balance, account2.Balance)
-	require.Equal(t, account1.Currency, account2.Currency)
-	require.WithinDuration(t, account1.CreatedAt, account2.CreatedAt, time.Second)
-
+	require.Equal(t, entry1.ID, entry2.ID)
+	require.Equal(t, entry1.AccountID, entry2.AccountID)
+	require.Equal(t, entry1.Amount, entry2.Amount)
+	require.WithinDuration(t, entry1.CreatedAt, entry2.CreatedAt, time.Second)
 }
 
 func TestListEntries(t *testing.T) {
+	account := createRandomAccount(t)
 	for i := 0; i < 10; i++ {
-		createRandomAccount(t)
+		createRandomEntry(t, account)
 	}
 
-	arg := ListAccountsParams{
-		Limit:  5,
-		Offset: 5,
+	arg := ListEntriesParams{
+		AccountID: account.ID,
+		Limit:     5,
+		Offset:    5,
 	}
 
-	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	entries, err := testQueries.ListEntries(context.Background(), arg)
 	require.NoError(t, err)
-	require.Len(t, accounts, 5)
-	for _, aaccount := range accounts {
-		require.NotEmpty(t, aaccount)
+	require.Len(t, entries, 5)
+
+	for _, entry := range entries {
+		require.NotEmpty(t, entry)
+		require.Equal(t, arg.AccountID, entry.AccountID)
 	}
 }
