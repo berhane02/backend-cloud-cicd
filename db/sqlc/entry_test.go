@@ -10,12 +10,12 @@ import (
 )
 
 func createRandomEntry(t *testing.T, account Account) Entry {
-	arg := CreateEntriesParams{
+	arg := CreateEntryParams{
 		AccountID: account.ID,
 		Amount:    util.RandomMoney(),
 	}
 
-	entry, err := testQueries.CreateEntries(context.Background(), arg)
+	entry, err := testQueries.CreateEntry(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, entry)
 
@@ -37,7 +37,7 @@ func TestGetEntry(t *testing.T) {
 	account := createRandomAccount(t)
 	entry1 := createRandomEntry(t, account)
 
-	entry2, err := testQueries.GetEntries(context.Background(), entry1.ID)
+	entry2, err := testQueries.GetEntry(context.Background(), entry1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, entry2)
 
