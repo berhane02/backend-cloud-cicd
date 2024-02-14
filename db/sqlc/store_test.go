@@ -16,12 +16,12 @@ func TestTransferTx(t *testing.T) {
 	// run n cuncurrent transfer tansaction
 
 	n := 5
-
 	amount := int64(10)
+
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
 
-	// run n concurrent tranfer transaction
+	// run n concurrent transfer transaction
 	for i := 0; i < n; i++ {
 		go func() {
 			result, err := store.TransferTx(context.Background(), TransferTxParams{
@@ -33,7 +33,6 @@ func TestTransferTx(t *testing.T) {
 			errs <- err
 			results <- result
 		}()
-
 	}
 
 	for i := 0; i < n; i++ {
@@ -77,6 +76,20 @@ func TestTransferTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// TODO: check accounts balance
+		fromAccount := result.FromAccount
+		require.NotEmpty(t, fromAccount)
+		require.Equal(t, account1.ID, fromAccount.ID)
+
+		toAccount := result.ToAccount
+		require.NotEmpty(t, toAccount)
+		require.Equal(t, account2.ID, toAccount.ID)
+
+		// check accounts' balance
+		diff1 := account1.Balance - fromAccount.Balance
+		diff2 := toAccount.Balance - account2.Balance
+		require.Equal(t, diff1, diff2)
+		require.True(t, diff1 > 0)
+		require.True(t, diff1%amount == 0)
 
 	}
 }
